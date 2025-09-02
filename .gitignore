@@ -137,3 +137,5 @@ dist
 
 # Other
 AppPass.md
+credentials.json
+token.json

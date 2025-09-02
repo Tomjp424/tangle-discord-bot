@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "A bot for parsing Tangle newsletters, parsing them, summarizing them, then posting them to a discord server.",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -10,7 +11,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "dotenv": "^17.2.1",
     "googleapis": "^159.0.0",
+    "html-to-text": "^9.0.5",
+    "openai": "^5.16.0",
     "readline-sync": "^1.4.10"
   }
 }
