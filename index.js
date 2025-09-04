@@ -11,54 +11,23 @@ dotenv.config();
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY})
 
 const SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"];
-const TOKEN_PATH = path.join(process.cwd(), "token.json");
-const CREDENTIALS_PATH = path.join(process.cwd(), "credentials.json");
 
 // Load gmail credentials saved on the local machine
-async function loadSavedCredentials() {
-    try {
-        const content = fs.readFileSync(TOKEN_PATH, "utf8");
-        const credentials = JSON.parse(content);
-        return google.auth.fromJSON(credentials);
-    } catch {
-        return null;
-    }
+function createOAuthClient() {
+    return new google.auth.OAuth2(
+        process.env.GOOGLE_CLIENT_ID,
+        process.env.GOOGLE_CLIENT_SECRET,
+        "http://localhost",
+    )
 }
-
-// Save input credentials to the local machine
-async function saveCredentials(client) {
-    const content = fs.readFileSync(CREDENTIALS_PATH, "utf8");
-    const keys = JSON.parse(content);
-    const key = keys.installed || keys.web;
-    const payload = JSON.stringify({
-        type: 'authorized_user',
-        client_id: key.client_id,
-        client_secret: key.client_secret,
-        refresh_token: client.credentials.refresh_token,
-    });
-    fs.writeFileSync(TOKEN_PATH, payload);
-}
-
 // If saved credentials are not yet authorized, prompt user to authorize
-async function authorize() {
-    let client = await loadSavedCredentials();
-    if (client) return client;
-
-    const content = fs.readFileSync(CREDENTIALS_PATH, "utf8");
-    const keys = JSON.parse(content);
-    const { client_secret, client_id, redirect_uris } = keys.installed;
-    const OAuth2Client = new google.auth.OAuth2(client_id, client_secret, redirect_uris[0]);
-
-    const authURL = OAuth2Client.generateAuthUrl({
-        access_type: 'offline',
-        scope: SCOPES,
+function authorize() {
+    const oAuth2Client = createOAuthClient();
+    oAuth2Client.setCredentials({
+        refresh_token: process.env.GOOGLE_REFRESH_TOKEN,
     });
-    console.log('Authorize by visiting here:', authURL);
-    const code = readlineSync.question('Please enter provided code:');
-    const { tokens } = await OAuth2Client.getToken(code);
-    OAuth2Client.setCredentials(tokens);
-    await saveCredentials(OAuth2Client);
-    return OAuth2Client;
+
+    return oAuth2Client;
 }
 
 // Extract the body of the email in plain text
